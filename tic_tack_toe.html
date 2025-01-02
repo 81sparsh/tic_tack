@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+    <style>
+        :root {
+            --bg-color-light: #f4f4f9;
+            --text-color-light: #333;
+            --cell-bg-light: #fff;
+            --cell-border-light: #333;
+
+            --bg-color-dark: #121212;
+            --text-color-dark: #f1f1f1;
+            --cell-bg-dark: #1e1e1e;
+            --cell-border-dark: #444;
+
+            --theme-color: #007acc;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color-light);
+            color: var(--text-color-light);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .dark-mode {
+            background-color: var(--bg-color-dark);
+            color: var(--text-color-dark);
+        }
+
+        .container {
+            margin-top: 20px;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 5px;
+            justify-content: center;
+            margin: 20px auto;
+        }
+
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: var(--cell-bg-light);
+            border: 2px solid var(--cell-border-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            color: var(--theme-color);
+        }
+
+        .dark-mode .cell {
+            background-color: var(--cell-bg-dark);
+            border-color: var(--cell-border-dark);
+        }
+
+        .cell.taken {
+            cursor: not-allowed;
+        }
+
+        .message {
+            font-size: 1.2rem;
+            margin: 20px 0;
+        }
+
+        button {
+            background-color: var(--theme-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 10px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .color-picker {
+            margin: 10px 0;
+        }
+
+        select {
+            padding: 5px;
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tic Tac Toe</h1>
+        <p>Play against the computer!</p>
+        <button class="toggle-mode">Switch to Dark Mode</button>
+        <div class="color-picker">
+            <label for="colorTheme">Choose a theme color:</label>
+            <select id="colorTheme">
+                <option value="#ff0000">Red</option>
+                <option value="#007acc">Blue</option>
+                <option value="#00a000">Green</option>
+                <option value="#ffa500">Orange</option>
+                <option value="#800080">Purple</option>
+            </select>
+        </div>
+        <div class="game-board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+        <p class="message"></p>
+        <button id="restart">Restart Game</button>
+    </div>
+    <script>
+        const cells = document.querySelectorAll('.cell');
+        const message = document.querySelector('.message');
+        const restartButton = document.getElementById('restart');
+        const toggleModeButton = document.querySelector('.toggle-mode');
+        const colorThemeSelect = document.getElementById('colorTheme');
+
+        let board = ['', '', '', '', '', '', '', '', ''];
+        let currentPlayer = 'X'; // Player is always 'X'
+        let isGameActive = true;
+        let isDarkMode = false;
+
+        // Winning combinations
+        const winningCombinations = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6],
+        ];
+
+        // Check for winner
+        function checkWinner(player) {
+            return winningCombinations.some(combination => {
+                return combination.every(index => board[index] === player);
+            });
+        }
+
+        // Check for a draw
+        function isDraw() {
+            return board.every(cell => cell !== '');
+        }
+
+        // Computer's turn
+        function computerMove() {
+            if (!isGameActive) return;
+
+            // Simple AI: Pick the first available cell
+            let availableCells = board.map((val, index) => val === '' ? index : null).filter(val => val !== null);
+            let move = availableCells[Math.floor(Math.random() * availableCells.length)];
+
+            if (move !== undefined) {
+                board[move] = 'O';
+                cells[move].textContent = 'O';
+                cells[move].classList.add('taken');
+
+                if (checkWinner('O')) {
+                    message.textContent = 'Computer Wins!';
+                    isGameActive = false;
+                    return;
+                }
+
+                if (isDraw()) {
+                    message.textContent = "It's a Draw!";
+                    isGameActive = false;
+                    return;
+                }
+
+                currentPlayer = 'X';
+                message.textContent = "Your turn!";
+            }
+        }
+
+        // Handle player move
+        function playerMove(index) {
+            if (!isGameActive || board[index] !== '') return;
+
+            board[index] = 'X';
+            cells[index].textContent = 'X';
+            cells[index].classList.add('taken');
+
+            if (checkWinner('X')) {
+                message.textContent = 'You Win!';
+                isGameActive = false;
+                return;
+            }
+
+            if (isDraw()) {
+                message.textContent = "It's a Draw!";
+                isGameActive = false;
+                return;
+            }
+
+            currentPlayer = 'O';
+            message.textContent = "Computer's turn!";
+            setTimeout(computerMove, 500);
+        }
+
+        // Add event listeners to cells
+        cells.forEach((cell, index) => {
+            cell.addEventListener('click', () => playerMove(index));
+        });
+
+        // Restart game
+        restartButton.addEventListener('click', () => {
+            board = ['', '', '', '', '', '', '', '', ''];
+            cells.forEach(cell => {
+                cell.textContent = '';
+                cell.classList.remove('taken');
+            });
+            currentPlayer = 'X';
+            isGameActive = true;
+            message.textContent = "Your turn!";
+        });
+
+        // Toggle Dark/Light Mode
+        toggleModeButton.addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark-mode', isDarkMode);
+            toggleModeButton.textContent = isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode";
+        });
+
+        // Change Theme Color
+        colorThemeSelect.addEventListener('change', (event) => {
+            document.documentElement.style.setProperty('--theme-color', event.target.value);
+        });
+    </script>
+</body>
+</html>
